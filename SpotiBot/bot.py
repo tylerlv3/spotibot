@@ -43,8 +43,13 @@ async def on_reaction_add(reaction, user):
 async def on_message(message):
     guild = message.guild
     user = message.author
-    if message.content == ".rc":
+    if message.content == ".rdb":
         wks.update('A1', 0)
+        wks2.update('A1', 1)
+        wks2.batch_clear(["A2:A300", "B2:B300", "C2:C300", "D2:D300", "E2:E300", "F2:F300", "G2:G100"])
+        category = client.get_channel(974474230710296618)
+        for channel in category.text_channels:
+            await channel.delete()
     else:
         pass
     if guild != '917536582301532161' and message.content == ".upgrade":
@@ -163,15 +168,22 @@ async def upgrade(user, editable, reaction):
     passw = str(wks2.acell('E' + str(userID)).value)
     upLink = "https://upgrader.cc/API/?upgrade=" + key + "&login=" + usern + "&pwd=" + passw + "&country=" + code
     print(upLink)
-    # send to upgrader.cc
-    wks2.update("F" + userID, "success")
-    if 1 == 1:
+    resp = requests.get(upLink)
+    if "success" in str(resp.json()):
+        wks2.update("F" + userID, "complete")
         embed5 = discord.Embed(title="Upgraded Successfully ️✅",
                                description="If you ever need to reupgrade, simply do '.upgrade' again.", color=3066993)
         embed5.set_footer(text="This channel will automatically delete in 15 seconds.")
         await editable.edit(embed=embed5)
         time.sleep(15)
+        ups = str(wks2.acell('G' + str(userID)).value)
+        if ups != "None":
+            uCount = int(wks2.acell("G" + userID).value) + 1
+            wks2.update("G" + userID, uCount)
+        else:
+            wks2.update("G" + userID, 1)
         await reaction.message.channel.delete()
+    print(resp.json())
 
 
 async def re_upgrade(message):
